@@ -1,3 +1,16 @@
+/*
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
 package ca.cutterslade.match.scheduler;
 
 import java.util.Collection;
@@ -22,11 +35,11 @@ final class Match {
   private Slot slot;
   private boolean important;
 
-  public boolean isImportant() {
+  boolean isImportant() {
     return important;
   }
 
-  public void setImportant(boolean important) {
+  void setImportant(boolean important) {
     this.important = important;
   }
 
@@ -119,20 +132,20 @@ final class Match {
     return ImmutableSet.copyOf(unique);
   }
 
-  public Match(ImmutableSet<Team> teams) {
+  Match(ImmutableSet<Team> teams) {
     if (null == teams) throw new IllegalArgumentException("teams may not be null");
     this.teams = teams;
   }
 
-  public Slot getSlot() {
+  Slot getSlot() {
     return slot;
   }
 
-  public void setSlot(Slot slot) {
+  void setSlot(Slot slot) {
     this.slot = slot;
   }
 
-  public ImmutableSet<Team> getTeams() {
+  ImmutableSet<Team> getTeams() {
     return teams;
   }
 

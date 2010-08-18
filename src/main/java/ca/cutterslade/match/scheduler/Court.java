@@ -1,3 +1,16 @@
+/*
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
 package ca.cutterslade.match.scheduler;
 
 import java.util.Set;
@@ -16,18 +29,18 @@ final class Court {
     return b.build();
   }
 
-  public Court(String name, Gym gym) {
+  Court(String name, Gym gym) {
     if (null == name) throw new IllegalArgumentException("name may not be null");
     if (null == gym) throw new IllegalArgumentException("gym may not be null");
     this.name = name;
     this.gym = gym;
   }
 
-  public String getName() {
+  String getName() {
     return name;
   }
 
-  public Gym getGym() {
+  Gym getGym() {
     return gym;
   }
 
