@@ -80,7 +80,7 @@ final class Slot {
 
   @Override
   public String toString() {
-    return "Time [court=" + court + ", day=" + day + ", time=" + time + "]";
+    return "Slot [gym=" + court.getGym().getName() + ", court=" + court.getName() + ", day=" + day.getName() + ", time=" + time.getName() + "]";
   }
 
 }

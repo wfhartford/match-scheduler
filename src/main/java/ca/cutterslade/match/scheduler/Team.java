@@ -75,7 +75,7 @@ final class Team {
 
   @Override
   public String toString() {
-    return "Team [name=" + name + ", tier=" + tier + "]";
+    return "Team " + name + "(" + tier.getName() + ")";
   }
 
 }
