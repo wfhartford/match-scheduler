@@ -34,6 +34,22 @@ final class Match {
   Slot getSlot() {
     return slot;
   }
+  
+  Day getDay() {
+    return slot.getDay();
+  }
+  
+  Time getTime() {
+    return slot.getTime();
+  }
+  
+  Gym getGym() {
+    return slot.getGym();
+  }
+  
+  Court getCourt() {
+    return slot.getCourt();
+  }
 
   ImmutableSet<Team> getTeams() {
     return teams;

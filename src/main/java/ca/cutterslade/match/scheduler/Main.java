@@ -13,7 +13,8 @@
  */
 package ca.cutterslade.match.scheduler;
 
-import com.google.common.collect.ImmutableSet;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 
 /**
  * @author W.F. Hartford
@@ -21,16 +22,49 @@ import com.google.common.collect.ImmutableSet;
  */
 public class Main {
   public static void main(String[] args) {
-    final Scheduler s = new Scheduler(48, 3, 3, 2, 2, 12);
-    ImmutableSet<Match> matches = s.getMatches();
-    printMatches(matches);
+    final Scheduler s = new Scheduler(Configuration.DEFAULT_CONFIGURATION, 48, 3, 3, 2, 2, 12);
+    printMatches(s);
   }
 
   /**
-   * @param matches
+   * @param s
+   *          .getMatches()
    */
-  private static void printMatches(ImmutableSet<Match> matches) {
-    for (Match m : matches)
+  private static void printMatches(Scheduler s) {
+    for (Match m : s.getMatches())
       System.out.println(m);
+    System.out.println(summary(s));
+  }
+
+  private static String summary(Scheduler scheduler) {
+    StringWriter w = new StringWriter();
+    PrintWriter p = new PrintWriter(w);
+    String columnFormat = " %12s";
+    p.printf(columnFormat, "Day");
+    p.printf(columnFormat, "Time");
+    for (Court c : scheduler.getCourts()) {
+      p.printf(columnFormat, c.getGym().getName() + '-' + c.getName());
+    }
+    p.println();
+    for (Day d : scheduler.getDays())
+      for (Time t : scheduler.getTimes()) {
+        p.printf(columnFormat, d.getName());
+        p.printf(columnFormat, t.getName());
+        for (Court c : scheduler.getCourts()) {
+          Match m = scheduler.getMatch(d, t, c);
+          p.printf(columnFormat, teamsString(m));
+        }
+        p.println();
+      }
+    p.close();
+    return w.toString();
+  }
+
+  private static String teamsString(Match m) {
+    StringBuilder b = new StringBuilder();
+    for (Team t : m.getTeams())
+      b.append(t.getName()).append(',');
+    b.setLength(b.length() - 1);
+    return b.toString();
   }
 }
