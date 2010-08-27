@@ -24,29 +24,29 @@ final class Match {
    * @param bestMatch
    * @param s
    */
-  public Match(ImmutableSet<Team> teams, Slot slot) {
+  public Match(Iterable<Team> teams, Slot slot) {
     if (null == teams) throw new IllegalArgumentException("teams may not be null");
     if (null == slot) throw new IllegalArgumentException("slot may not be null");
-    this.teams = teams;
+    this.teams = ImmutableSet.copyOf(teams);
     this.slot = slot;
   }
 
   Slot getSlot() {
     return slot;
   }
-  
+
   Day getDay() {
     return slot.getDay();
   }
-  
+
   Time getTime() {
     return slot.getTime();
   }
-  
+
   Gym getGym() {
     return slot.getGym();
   }
-  
+
   Court getCourt() {
     return slot.getCourt();
   }

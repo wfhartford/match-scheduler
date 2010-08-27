@@ -14,6 +14,8 @@
 package ca.cutterslade.match.scheduler;
 
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -22,6 +24,7 @@ import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 /**
@@ -59,7 +62,14 @@ final class MatchMaker {
 
   ImmutableSet<Match> getMatches() {
     ImmutableSet.Builder<Match> b = ImmutableSet.builder();
-    for (Day d : days.keySet())
+    final Collection<Day> days;
+    if (configuration.isRandomizeDayOrder()) {
+      List<Day> d = Lists.newArrayList(this.days.keySet());
+      Collections.shuffle(d);
+      days = d;
+    }
+    else days = this.days.keySet();
+    for (Day d : days)
       b.addAll(getMatchesForDay(d, b.build()));
     return b.build();
   }
@@ -68,7 +78,14 @@ final class MatchMaker {
     Set<Team> teams = Sets.newHashSet(this.teams);
     Set<Match> made = Sets.newHashSet();
     while (!teams.isEmpty()) {
-      for (Slot s : this.days.get(day)) {
+      final Collection<Slot> slots;
+      if (configuration.isRandomizeSlotOrder()) {
+        List<Slot> s = Lists.newArrayList(this.days.get(day));
+        Collections.shuffle(s);
+        slots = s;
+      }
+      else slots = this.days.get(day);
+      for (Slot s : slots) {
         int leastSadFaces = Integer.MAX_VALUE;
         ImmutableSet<Team> bestMatch = null;
         for (ImmutableSet<Team> m : this.matches) {
@@ -80,7 +97,13 @@ final class MatchMaker {
             }
           }
         }
-        Match m = new Match(bestMatch, s);
+        final Match m;
+        if (configuration.isRandomizeMatchOrder()) {
+          List<Team> r = Lists.newArrayList(bestMatch);
+          Collections.shuffle(r);
+          m = new Match(r, s);
+        }
+        else m = new Match(bestMatch, s);
         made.add(m);
         teams.removeAll(bestMatch);
       }
@@ -89,7 +112,7 @@ final class MatchMaker {
   }
 
   /**
-   * @param limit 
+   * @param limit
    * @param s
    * @param m
    * @param iterable

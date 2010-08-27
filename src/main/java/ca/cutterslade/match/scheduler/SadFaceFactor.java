@@ -23,7 +23,7 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 
 public enum SadFaceFactor {
-  GYM {
+  GYM(1) {
 
     @Override
     public int getSadFaces(Slot slot, ImmutableSet<Team> match, Iterable<Match> existingMatches, int limit) {
@@ -36,7 +36,7 @@ public enum SadFaceFactor {
       return sadFaces;
     }
   },
-  TIME {
+  TIME(1) {
 
     @Override
     public int getSadFaces(Slot slot, ImmutableSet<Team> match, Iterable<Match> existingMatches, int limit) {
@@ -49,7 +49,7 @@ public enum SadFaceFactor {
       return sadFaces;
     }
   },
-  MATCH_UP {
+  MATCH_UP(4) {
 
     @Override
     public int getSadFaces(Slot slot, ImmutableSet<Team> match, Iterable<Match> existingMatches, int limit) {
@@ -68,5 +68,16 @@ public enum SadFaceFactor {
       return sadFaces;
     }
   };
+
+  private final int defaultValue;
+
+  private SadFaceFactor(int defaultValue) {
+    this.defaultValue = defaultValue;
+  }
+
   abstract int getSadFaces(Slot slot, ImmutableSet<Team> match, Iterable<Match> existingMatches, int limit);
+
+  public int getDefaultValue() {
+    return defaultValue;
+  }
 }

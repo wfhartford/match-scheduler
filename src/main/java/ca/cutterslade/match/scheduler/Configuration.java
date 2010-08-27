@@ -18,15 +18,43 @@ import java.util.Map;
 import com.google.common.collect.ImmutableMap;
 
 public class Configuration {
-  static final Configuration DEFAULT_CONFIGURATION = new Configuration(ImmutableMap.<SadFaceFactor, Integer> of());
+  static final Configuration DEFAULT_CONFIGURATION = new Configuration(false);
+  static final Configuration RANDOM_CONFIGURATION = new Configuration(true);
   private final ImmutableMap<SadFaceFactor, Integer> factors;
+  private final boolean randomizeMatchOrder;
+  private final boolean randomizeDayOrder;
+  private final boolean randomizeSlotOrder;
 
-  Configuration(Map<SadFaceFactor, Integer> factors) {
-    this.factors = ImmutableMap.copyOf(factors);
+  public Configuration(boolean random) {
+    this(null, random, random, random);
+  }
+
+  public Configuration(Map<SadFaceFactor, Integer> factors, boolean random) {
+    this(factors, random, random, random);
+  }
+
+  public Configuration(Map<SadFaceFactor, Integer> factors, boolean randomizeMatchOrder, boolean randomizeDayOrder, boolean randomizeSlotOrder) {
+    this.factors = null == factors ? ImmutableMap.<SadFaceFactor, Integer> of() : ImmutableMap.copyOf(factors);
+    this.randomizeMatchOrder = randomizeMatchOrder;
+    this.randomizeDayOrder = randomizeDayOrder;
+    this.randomizeSlotOrder = randomizeSlotOrder;
   }
 
   int getFactor(SadFaceFactor factor) {
     Integer value = factors.get(factor);
-    return null == value ? 1 : value.intValue();
+    return null == value ? factor.getDefaultValue() : value.intValue();
   }
+
+  boolean isRandomizeMatchOrder() {
+    return randomizeMatchOrder;
+  }
+
+  boolean isRandomizeDayOrder() {
+    return randomizeDayOrder;
+  }
+
+  boolean isRandomizeSlotOrder() {
+    return randomizeSlotOrder;
+  }
+
 }
