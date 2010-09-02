@@ -26,7 +26,7 @@ public enum SadFaceFactor {
   GYM(1) {
 
     @Override
-    public int getSadFaces(Slot slot, ImmutableSet<Team> match, Iterable<Match> existingMatches, int limit) {
+    int getSadFaces(Slot slot, ImmutableSet<Team> match, Iterable<Match> existingMatches, int limit) {
       int sadFaces = 0;
       for (Match m : existingMatches) {
         int commonTeams = Sets.intersection(match, m.getTeams()).size();
@@ -39,7 +39,7 @@ public enum SadFaceFactor {
   TIME(1) {
 
     @Override
-    public int getSadFaces(Slot slot, ImmutableSet<Team> match, Iterable<Match> existingMatches, int limit) {
+    int getSadFaces(Slot slot, ImmutableSet<Team> match, Iterable<Match> existingMatches, int limit) {
       int sadFaces = 0;
       for (Match m : existingMatches) {
         int commonTeams = Sets.intersection(match, m.getTeams()).size();
@@ -52,7 +52,7 @@ public enum SadFaceFactor {
   MATCH_UP(4) {
 
     @Override
-    public int getSadFaces(Slot slot, ImmutableSet<Team> match, Iterable<Match> existingMatches, int limit) {
+    int getSadFaces(Slot slot, ImmutableSet<Team> match, Iterable<Match> existingMatches, int limit) {
       Multimap<Team, Team> playCount = ArrayListMultimap.create();
       for (Team t : match) {
         Set<Team> others = ImmutableSet.copyOf(Sets.difference(match, ImmutableSet.of(t)));

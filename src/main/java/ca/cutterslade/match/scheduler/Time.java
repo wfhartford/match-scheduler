@@ -17,7 +17,8 @@ import java.util.Set;
 
 import com.google.common.collect.ImmutableSet;
 
-final class Time {
+public final class Time {
+
   private final String name;
 
   static ImmutableSet<Time> forNames(Set<String> names) {
@@ -32,7 +33,7 @@ final class Time {
     this.name = name;
   }
 
-  String getName() {
+  public String getName() {
     return name;
   }
 

@@ -13,11 +13,19 @@
  */
 package ca.cutterslade.match.scheduler;
 
+import java.io.Serializable;
+
 import com.google.common.collect.ImmutableSet;
 
-final class Match {
+public final class Match implements Serializable {
+
+  /**
+   * 1
+   */
+  private static final long serialVersionUID = 1L;
 
   private final ImmutableSet<Team> teams;
+
   private final Slot slot;
 
   /**
@@ -31,27 +39,27 @@ final class Match {
     this.slot = slot;
   }
 
-  Slot getSlot() {
+  public Slot getSlot() {
     return slot;
   }
 
-  Day getDay() {
+  public Day getDay() {
     return slot.getDay();
   }
 
-  Time getTime() {
+  public Time getTime() {
     return slot.getTime();
   }
 
-  Gym getGym() {
+  public Gym getGym() {
     return slot.getGym();
   }
 
-  Court getCourt() {
+  public Court getCourt() {
     return slot.getCourt();
   }
 
-  ImmutableSet<Team> getTeams() {
+  public ImmutableSet<Team> getTeams() {
     return teams;
   }
 

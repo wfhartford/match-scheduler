@@ -34,9 +34,13 @@ import com.google.common.collect.Sets;
 final class MatchMaker {
 
   private final Configuration configuration;
+
   private final ImmutableSet<Team> teams;
+
   private final ImmutableMultimap<Tier, Team> tiers;
+
   private final ImmutableSet<ImmutableSet<Team>> matches;
+
   private final ImmutableMultimap<Day, Slot> days;
 
   MatchMaker(Configuration configuration, ImmutableSet<Slot> slots, ImmutableSet<Team> teams) {

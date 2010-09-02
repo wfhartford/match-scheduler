@@ -31,6 +31,7 @@ import com.google.common.collect.ImmutableMap;
  * 
  */
 public class Main {
+
   private static final Options OPTIONS;
   static {
     final Options o = new Options();

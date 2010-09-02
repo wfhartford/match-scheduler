@@ -13,6 +13,7 @@
  */
 package ca.cutterslade.match.scheduler;
 
+import java.io.Serializable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -20,8 +21,15 @@ import java.util.Set;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
-final class Team {
+public final class Team implements Serializable {
+
+  /**
+   * 1
+   */
+  private static final long serialVersionUID = 1L;
+
   private final String name;
+
   private final Tier tier;
 
   static ImmutableSet<Team> forNames(Set<String> names, Set<Tier> tiers) {
@@ -45,11 +53,11 @@ final class Team {
     this.tier = tier;
   }
 
-  Tier getTier() {
+  public Tier getTier() {
     return tier;
   }
 
-  String getName() {
+  public String getName() {
     return name;
   }
 

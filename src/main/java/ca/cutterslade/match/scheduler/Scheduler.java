@@ -22,17 +22,29 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 
 public final class Scheduler {
+
   private final Configuration config;
+
   private final ImmutableSet<Gym> gyms;
+
   private final ImmutableSet<Court> courts;
+
   private final ImmutableSet<Day> days;
+
   private final ImmutableSet<Time> times;
+
   private final ImmutableSet<Slot> slots;
+
   private final ImmutableSet<Tier> tiers;
+
   private final ImmutableSet<Team> teams;
+
   private final ImmutableSet<Match> matches;
+
   private final ImmutableMap<Day, ImmutableMap<Time, ImmutableSet<Match>>> dayTimeMatches;
+
   private final ImmutableMap<Day, ImmutableSet<Match>> dayMatches;
+
   private final ImmutableMap<Slot, Match> slotMatches;
 
   public Scheduler(Configuration config, Set<String> teams, Set<String> tiers, Set<String> gyms, Set<String> courts, Set<String> times, Set<String> days) {

@@ -13,16 +13,28 @@
  */
 package ca.cutterslade.match.scheduler;
 
+import java.io.Serializable;
 import java.util.Map;
 
 import com.google.common.collect.ImmutableMap;
 
-public class Configuration {
+public class Configuration implements Serializable {
+
+  /**
+   * 1
+   */
+  private static final long serialVersionUID = 1L;
+
   static final Configuration DEFAULT_CONFIGURATION = new Configuration(false);
+
   static final Configuration RANDOM_CONFIGURATION = new Configuration(true);
+
   private final ImmutableMap<SadFaceFactor, Integer> factors;
+
   private final boolean randomizeMatchOrder;
+
   private final boolean randomizeDayOrder;
+
   private final boolean randomizeSlotOrder;
 
   public Configuration(boolean random) {
@@ -55,6 +67,35 @@ public class Configuration {
 
   boolean isRandomizeSlotOrder() {
     return randomizeSlotOrder;
+  }
+
+  @Override
+  public int hashCode() {
+    final int prime = 31;
+    int result = 1;
+    result = prime * result + factors.hashCode();
+    result = prime * result + (randomizeDayOrder ? 1231 : 1237);
+    result = prime * result + (randomizeMatchOrder ? 1231 : 1237);
+    result = prime * result + (randomizeSlotOrder ? 1231 : 1237);
+    return result;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) return true;
+    if (obj == null) return false;
+    if (getClass() != obj.getClass()) return false;
+    Configuration other = (Configuration) obj;
+    if (!factors.equals(other.factors)) return false;
+    if (randomizeDayOrder != other.randomizeDayOrder) return false;
+    if (randomizeMatchOrder != other.randomizeMatchOrder) return false;
+    if (randomizeSlotOrder != other.randomizeSlotOrder) return false;
+    return true;
+  }
+
+  @Override
+  public String toString() {
+    return "Configuration [factors=" + factors + ", randomizeMatchOrder=" + randomizeMatchOrder + ", randomizeDayOrder=" + randomizeDayOrder + ", randomizeSlotOrder=" + randomizeSlotOrder + "]";
   }
 
 }
