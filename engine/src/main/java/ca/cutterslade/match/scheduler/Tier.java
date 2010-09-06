@@ -17,8 +17,10 @@ import java.io.Serializable;
 import java.util.Set;
 
 import com.google.common.base.Function;
+import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 
 public final class Tier implements Serializable {
 
@@ -28,6 +30,14 @@ public final class Tier implements Serializable {
   private static final long serialVersionUID = 1L;
 
   private final String name;
+
+  private final Predicate<Team> teamPredicate = new Predicate<Team>() {
+
+    @Override
+    public boolean apply(Team input) {
+      return input.getTier().equals(Tier.this);
+    }
+  };
 
   static ImmutableSet<Tier> forNames(Set<String> names) {
     return ImmutableSet.copyOf(Collections2.transform(names, new Function<String, Tier>() {
@@ -46,6 +56,14 @@ public final class Tier implements Serializable {
 
   public String getName() {
     return name;
+  }
+
+  public Predicate<Team> getPredicate() {
+    return teamPredicate;
+  }
+
+  public Iterable<Team> getTeams(Iterable<Team> allTeams) {
+    return Iterables.filter(allTeams, teamPredicate);
   }
 
   @Override

@@ -19,19 +19,21 @@ import java.util.Set;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 
 public enum SadFaceFactor {
-  GYM(1) {
+  GYM(2) {
 
     @Override
     int getSadFaces(Slot slot, ImmutableSet<Team> match, Iterable<Match> existingMatches, int limit) {
+//      if (allByes(match)) return 0;
       int sadFaces = 0;
       for (Match m : existingMatches) {
         int commonTeams = Sets.intersection(match, m.getTeams()).size();
         if (0 != commonTeams && m.getSlot().getGym().equals(slot.getGym())) sadFaces += commonTeams;
-        if (sadFaces > limit) break;
+        if (sadFaces >= limit) break;
       }
       return sadFaces;
     }
@@ -40,11 +42,12 @@ public enum SadFaceFactor {
 
     @Override
     int getSadFaces(Slot slot, ImmutableSet<Team> match, Iterable<Match> existingMatches, int limit) {
+//      if (allByes(match)) return 0;
       int sadFaces = 0;
       for (Match m : existingMatches) {
         int commonTeams = Sets.intersection(match, m.getTeams()).size();
         if (0 != commonTeams && m.getSlot().getTime().equals(slot.getTime())) sadFaces += commonTeams;
-        if (sadFaces > limit) break;
+        if (sadFaces >= limit) break;
       }
       return sadFaces;
     }
@@ -53,6 +56,7 @@ public enum SadFaceFactor {
 
     @Override
     int getSadFaces(Slot slot, ImmutableSet<Team> match, Iterable<Match> existingMatches, int limit) {
+//      if (allByes(match)) return 0;
       Multimap<Team, Team> playCount = ArrayListMultimap.create();
       for (Team t : match) {
         Set<Team> others = ImmutableSet.copyOf(Sets.difference(match, ImmutableSet.of(t)));
@@ -64,8 +68,17 @@ public enum SadFaceFactor {
       for (Map.Entry<Team, Collection<Team>> e : playCount.asMap().entrySet()) {
         int alreadyPlayedCount = e.getValue().size();
         sadFaces += alreadyPlayedCount * alreadyPlayedCount;
+        if (sadFaces >= limit) return sadFaces;
       }
       return sadFaces;
+    }
+  },
+  BYE_MATCH(0) {
+
+    @Override
+    int getSadFaces(Slot slot, ImmutableSet<Team> match, Iterable<Match> existingMatches, int limit) {
+      int byes = Iterables.size(Iterables.filter(match, Team.BYE_PREDICATE));
+      return byes == match.size() || byes == 0 ? 0 : 1;
     }
   };
 
@@ -79,5 +92,9 @@ public enum SadFaceFactor {
 
   public int getDefaultValue() {
     return defaultValue;
+  }
+
+  boolean allByes(ImmutableSet<Team> match) {
+    return Iterables.size(Iterables.filter(match, Team.BYE_PREDICATE)) == match.size();
   }
 }

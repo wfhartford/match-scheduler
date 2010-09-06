@@ -47,7 +47,7 @@ public final class Scheduler {
 
   private final ImmutableMap<Slot, Match> slotMatches;
 
-  public Scheduler(Configuration config, Set<String> teams, Set<String> tiers, Set<String> gyms, Set<String> courts, Set<String> times, Set<String> days) throws InterruptedException {
+  public Scheduler(Configuration config, Set<String> teams, Set<String> tiers, Set<String> gyms, Set<String> courts, Set<String> times, Set<String> days, int size) throws InterruptedException {
     if (null == config) throw new IllegalArgumentException("config may not be null");
     if (null == teams) throw new IllegalArgumentException("teams may not be null");
     if (null == tiers) throw new IllegalArgumentException("tiers may not be null");
@@ -62,8 +62,13 @@ public final class Scheduler {
     this.times = Time.forNames(times);
     this.slots = Slot.forNames(this.times, this.courts, this.days);
     this.tiers = Tier.forNames(tiers);
-    this.teams = Team.forNames(teams, this.tiers);
-    this.matches = new MatchMaker(config, slots, this.teams).getMatches();
+    int slotsPerDay = gyms.size() * courts.size() * times.size();
+    int possibleTeams = slotsPerDay * size;
+    ImmutableSet<Team> realTeams = Team.forNames(teams, this.tiers, (int) Math.ceil(possibleTeams / (double) this.tiers.size()));
+    if (teams.size() > possibleTeams) throw new IllegalArgumentException(teams.size() + " teams cannot play in " + slotsPerDay + " slots per day");
+    else if (teams.size() < possibleTeams) this.teams = padWithByes(this.tiers, realTeams, possibleTeams / this.tiers.size());
+    else this.teams = realTeams;
+    this.matches = new MatchMaker(config, slots, this.teams, size).getMatches();
     ImmutableMap.Builder<Day, ImmutableMap<Time, ImmutableSet<Match>>> dayTimeMatches = ImmutableMap.builder();
     for (Day day : this.days) {
       ImmutableMap.Builder<Time, ImmutableSet<Match>> timeMatches = ImmutableMap.builder();
@@ -89,8 +94,20 @@ public final class Scheduler {
     });
   }
 
-  public Scheduler(Configuration config, int nTeams, int nTiers, int nGyms, int nCourts, int nTimes, int nDays) throws InterruptedException {
-    this(config, setOf(nTeams), setOf(nTiers), setOf(nGyms), setOf(nCourts), setOf(nTimes), setOf(nDays));
+  private static ImmutableSet<Team> padWithByes(ImmutableSet<Tier> tiers, ImmutableSet<Team> realTeams, int teamsPerTier) {
+    ImmutableSet.Builder<Team> b = ImmutableSet.builder();
+    for (Tier tier : tiers) {
+      ImmutableSet<Team> tierTeams = ImmutableSet.copyOf(tier.getTeams(realTeams));
+      b.addAll(tierTeams);
+      if (tierTeams.size() > teamsPerTier) throw new AssertionError("More than allowed number of teams");
+      if (tierTeams.size() < teamsPerTier) for (int i = 0, n = teamsPerTier - tierTeams.size(); i < n; i++)
+        b.add(new Team("B" + i, tier));
+    }
+    return b.build();
+  }
+
+  public Scheduler(Configuration config, int nTeams, int nTiers, int nGyms, int nCourts, int nTimes, int nDays, int size) throws InterruptedException {
+    this(config, setOf(nTeams), setOf(nTiers), setOf(nGyms), setOf(nCourts), setOf(nTimes), setOf(nDays), size);
   }
 
   private static ImmutableSet<String> setOf(int n) {

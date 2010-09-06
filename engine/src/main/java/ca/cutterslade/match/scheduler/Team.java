@@ -17,9 +17,13 @@ import java.io.Serializable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Pattern;
 
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 
 public final class Team implements Serializable {
 
@@ -28,20 +32,31 @@ public final class Team implements Serializable {
    */
   private static final long serialVersionUID = 1L;
 
+  public static final Predicate<Team> BYE_PREDICATE = new Predicate<Team>() {
+
+    @Override
+    public boolean apply(Team input) {
+      return input.isBye();
+    }
+  };
+
+  public static final Pattern BYE_PATTERN = Pattern.compile("B\\d+");
+
   private final String name;
 
   private final Tier tier;
 
-  static ImmutableSet<Team> forNames(Set<String> names, Set<Tier> tiers) {
-    if (0 != names.size() % tiers.size()) throw new IllegalArgumentException("number of teams must be divisable by number of tiers");
+  private final boolean isBye;
+
+  static ImmutableSet<Team> forNames(Set<String> names, Set<Tier> tiers, int tierSize) {
     ImmutableSet.Builder<Team> teams = ImmutableSet.builder();
-    Iterable<List<String>> it = Iterables.partition(names, names.size() / tiers.size());
-    Iterator<Tier> tierIt = tiers.iterator();
-    for (List<String> teamNames : it) {
-      Tier t = tierIt.next();
-      for (String name : teamNames) {
-        teams.add(new Team(name, t));
-      }
+    Iterator<String> tit = names.iterator();
+    for (Tier t : tiers) {
+      List<Team> tierTeams = Lists.newArrayList();
+      while (tit.hasNext() && tierSize > tierTeams.size())
+        tierTeams.add(new Team(tit.next(), t));
+      teams.addAll(tierTeams);
+      if (!tit.hasNext()) break;
     }
     return teams.build();
   }
@@ -51,6 +66,7 @@ public final class Team implements Serializable {
     if (null == tier) throw new IllegalArgumentException("tier may not be null");
     this.name = name;
     this.tier = tier;
+    this.isBye = BYE_PATTERN.matcher(name).matches();
   }
 
   public Tier getTier() {
@@ -59,6 +75,10 @@ public final class Team implements Serializable {
 
   public String getName() {
     return name;
+  }
+
+  public boolean isBye() {
+    return isBye;
   }
 
   @Override

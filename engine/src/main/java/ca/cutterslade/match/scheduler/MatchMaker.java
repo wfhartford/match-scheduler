@@ -20,6 +20,7 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 
 import com.google.common.base.Function;
+import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableMultimap;
@@ -34,53 +35,80 @@ import com.google.common.collect.Sets;
  */
 final class MatchMaker {
 
-  private static class PossibleMatchesCallable implements Callable<Set<ImmutableSet<Team>>> {
+  private static final class PossibleMatchesCallable implements Callable<Set<ImmutableSet<Team>>> {
 
-    private static final Function<Collection<Team>, Callable<Set<ImmutableSet<Team>>>> CTOR_FN = new Function<Collection<Team>, Callable<Set<ImmutableSet<Team>>>>() {
+    private static final class ConstructorFunction implements Function<Collection<Team>, Callable<Set<ImmutableSet<Team>>>> {
+
+      private final int teamsPerMatch;
+
+      public ConstructorFunction(int teamsPerMatch) {
+        this.teamsPerMatch = teamsPerMatch;
+      }
 
       @Override
       public Callable<Set<ImmutableSet<Team>>> apply(Collection<Team> from) {
-        return new PossibleMatchesCallable(from);
+        return new PossibleMatchesCallable(from, teamsPerMatch);
       }
-    };
-
-    static Iterable<Callable<Set<ImmutableSet<Team>>>> forTiers(Iterable<Collection<Team>> tiers) {
-      return Iterables.transform(tiers, CTOR_FN);
     }
 
-    private Collection<Team> tier;
+    static Iterable<Callable<Set<ImmutableSet<Team>>>> forTiers(Iterable<Collection<Team>> tiers, int teamsPerMatch) {
+      return Iterables.transform(tiers, new ConstructorFunction(teamsPerMatch));
+    }
 
-    PossibleMatchesCallable(Collection<Team> tier) {
+    private final Collection<Team> tier;
+
+    private final int teamsPerMatch;
+
+    PossibleMatchesCallable(Collection<Team> tier, int teamsPerMatch) {
       this.tier = tier;
+      this.teamsPerMatch = teamsPerMatch;
     }
+
+//    @Override
+//    public Set<ImmutableSet<Team>> call() throws Exception {
+//      Set<ImmutableSet<Team>> tierMatches = Sets.newHashSet();
+//      for (Team t1 : tier)
+//        for (Team t2 : Collections2.filter(tier, Predicates.not(Predicates.in(ImmutableSet.of(t1)))))
+//          for (Team t3 : Collections2.filter(tier, Predicates.not(Predicates.in(ImmutableSet.of(t1, t2)))))
+//            for (Team t4 : Collections2.filter(tier, Predicates.not(Predicates.in(ImmutableSet.of(t1, t2, t3)))))
+//              tierMatches.add(ImmutableSet.of(t1, t2, t3, t4));
+//      System.out.println("Total of " + tierMatches.size() + " possible matches");
+//      return tierMatches;
+//    }
 
     @Override
     public Set<ImmutableSet<Team>> call() throws Exception {
-      Set<ImmutableSet<Team>> tierMatches = Sets.newHashSet();
-      for (Team t1 : tier)
-        for (Team t2 : Collections2.filter(tier, Predicates.not(Predicates.in(ImmutableSet.of(t1)))))
-          for (Team t3 : Collections2.filter(tier, Predicates.not(Predicates.in(ImmutableSet.of(t1, t2)))))
-            for (Team t4 : Collections2.filter(tier, Predicates.not(Predicates.in(ImmutableSet.of(t1, t2, t3)))))
-              tierMatches.add(ImmutableSet.of(t1, t2, t3, t4));
-      return tierMatches;
+      Set<ImmutableSet<Team>> matches = Sets.newLinkedHashSet();
+      build(Sets.<Team> newLinkedHashSet(), matches);
+      System.out.println("Total of " + matches.size() + " possible matches");
+      return matches;
     }
 
+    private void build(Set<Team> match, Set<ImmutableSet<Team>> matches) {
+      Iterable<Team> options = match.isEmpty() ? this.tier : Iterables.filter(this.tier, Predicates.not(Predicates.in(match)));
+      for (Team t : options) {
+        Set<Team> thisMatch = Sets.newLinkedHashSet(match);
+        thisMatch.add(t);
+        if (thisMatch.size() == teamsPerMatch) matches.add(ImmutableSet.copyOf(thisMatch));
+        else build(thisMatch, matches);
+      }
+    }
   }
 
   private static class SadFacesCallable implements Callable<Integer> {
-  
+
     private final SadFaceFactor factor;
-  
+
     private final int weight;
-  
+
     private final Slot slot;
-  
+
     private final ImmutableSet<Team> match;
-  
+
     private final Iterable<Match> existingMatches;
-  
+
     private final int limit;
-  
+
     SadFacesCallable(SadFaceFactor factor, int weight, Slot slot, ImmutableSet<Team> match, Iterable<Match> existingMatches, int limit) {
       this.factor = factor;
       this.weight = weight;
@@ -89,12 +117,12 @@ final class MatchMaker {
       this.existingMatches = existingMatches;
       this.limit = limit;
     }
-  
+
     @Override
     public Integer call() throws Exception {
       return weight * factor.getSadFaces(slot, match, existingMatches, limit);
     }
-  
+
   }
 
   private final Executor executor = new Executor();
@@ -107,10 +135,13 @@ final class MatchMaker {
 
   private final ImmutableMultimap<Day, Slot> days;
 
-  MatchMaker(Configuration configuration, ImmutableSet<Slot> slots, ImmutableSet<Team> teams) {
+  private final int size;
+
+  MatchMaker(Configuration configuration, ImmutableSet<Slot> slots, ImmutableSet<Team> teams, int size) {
     if (null == configuration) throw new IllegalArgumentException("configuration may not be null");
     if (null == slots) throw new IllegalArgumentException("slots may not be null");
     if (null == teams) throw new IllegalArgumentException("teams may not be null");
+    if (2 > size) throw new IllegalArgumentException("size must be two or greater");
     this.configuration = configuration;
     this.teams = teams;
     ImmutableMultimap.Builder<Tier, Team> tiers = ImmutableMultimap.builder();
@@ -122,10 +153,11 @@ final class MatchMaker {
     for (Slot s : slots)
       days.put(s.getDay(), s);
     this.days = days.build();
+    this.size = size;
   }
 
   ImmutableSet<Match> getMatches() throws InterruptedException {
-    ImmutableSet<ImmutableSet<Team>> matches = executor.union(PossibleMatchesCallable.forTiers(this.tiers.asMap().values()));
+    ImmutableSet<ImmutableSet<Team>> matches = executor.union(PossibleMatchesCallable.forTiers(this.tiers.asMap().values(), size));
     ImmutableSet.Builder<Match> b = ImmutableSet.builder();
     final Collection<Day> days;
     if (configuration.isRandomizeDayOrder()) {

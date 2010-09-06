@@ -41,6 +41,7 @@ public class Main {
     o.addOption(OptionBuilder.withLongOpt("courts").hasArg().withArgName("count").withDescription("The number of courts in each gym").isRequired().create('c'));
     o.addOption(OptionBuilder.withLongOpt("times").hasArg().withArgName("count").withDescription("The number of time slots per day").isRequired().create('m'));
     o.addOption(OptionBuilder.withLongOpt("days").hasArg().withArgName("count").withDescription("The number of play days in the season").isRequired().create('d'));
+    o.addOption(OptionBuilder.withLongOpt("size").hasArg().withArgName("count").withDescription("The number of teams in each match").isRequired().create('z'));
     o.addOption(OptionBuilder.withLongOpt("randomMatches").withDescription("Randomize the order of teams within each match").create());
     o.addOption(OptionBuilder.withLongOpt("randomSlots").withDescription("Randomize the order of slots within each day").create());
     o.addOption(OptionBuilder.withLongOpt("randomDays").withDescription("Randomize the order of days within each season").create());
@@ -58,25 +59,26 @@ public class Main {
       final int courts = Integer.parseInt(line.getOptionValue('c'));
       final int times = Integer.parseInt(line.getOptionValue('m'));
       final int days = Integer.parseInt(line.getOptionValue('d'));
+      final int size = Integer.parseInt(line.getOptionValue('z'));
       final Configuration config;
       if (line.hasOption("random")) config = Configuration.RANDOM_CONFIGURATION;
       else config = new Configuration(ImmutableMap.<SadFaceFactor, Integer> of(), line.hasOption("randomMatches"), line.hasOption("randomSlots"), line.hasOption("randomDays"));
-      final Scheduler s = new Scheduler(config, teams, tiers, gyms, courts, times, days);
+      final Scheduler s = new Scheduler(config, teams, tiers, gyms, courts, times, days, size);
       System.out.println(summary(s));
     }
     catch (final ParseException e) {
       final HelpFormatter f = new HelpFormatter();
       final PrintWriter pw = new PrintWriter(System.err);
       f.printHelp(pw, 80, "match-scheduler", null, OPTIONS, 2, 2, null, true);
+      pw.println("For example: match-scheduler -t 48 -r 3 -d 12 -m 2 -g 3 -c 2 --randomMatches --randomSlots");
       pw.close();
-      System.err.println("For example: match-scheduler -t 48 -r 3 -d 12 -m 2 -g 3 -c 2 --randomMatches --randomSlots");
     }
   }
 
   private static String summary(final Scheduler scheduler) {
     final StringWriter w = new StringWriter();
     final PrintWriter p = new PrintWriter(w);
-    final String columnFormat = " %12s";
+    final String columnFormat = " %15s";
     p.printf(columnFormat, "Day");
     p.printf(columnFormat, "Time");
     for (final Court c : scheduler.getCourts()) {
