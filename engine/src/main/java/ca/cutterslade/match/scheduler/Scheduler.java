@@ -47,7 +47,7 @@ public final class Scheduler {
 
   private final ImmutableMap<Slot, Match> slotMatches;
 
-  public Scheduler(Configuration config, Set<String> teams, Set<String> tiers, Set<String> gyms, Set<String> courts, Set<String> times, Set<String> days) {
+  public Scheduler(Configuration config, Set<String> teams, Set<String> tiers, Set<String> gyms, Set<String> courts, Set<String> times, Set<String> days) throws InterruptedException {
     if (null == config) throw new IllegalArgumentException("config may not be null");
     if (null == teams) throw new IllegalArgumentException("teams may not be null");
     if (null == tiers) throw new IllegalArgumentException("tiers may not be null");
@@ -89,7 +89,7 @@ public final class Scheduler {
     });
   }
 
-  public Scheduler(Configuration config, int nTeams, int nTiers, int nGyms, int nCourts, int nTimes, int nDays) {
+  public Scheduler(Configuration config, int nTeams, int nTiers, int nGyms, int nCourts, int nTimes, int nDays) throws InterruptedException {
     this(config, setOf(nTeams), setOf(nTiers), setOf(nGyms), setOf(nCourts), setOf(nTimes), setOf(nDays));
   }
 

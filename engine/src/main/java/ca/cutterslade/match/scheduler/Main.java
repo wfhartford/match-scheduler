@@ -48,7 +48,7 @@ public class Main {
     OPTIONS = o;
   }
 
-  public static void main(final String[] args) {
+  public static void main(final String[] args) throws InterruptedException {
     final CommandLineParser parser = new PosixParser();
     try {
       final CommandLine line = parser.parse(OPTIONS, args);
@@ -69,6 +69,7 @@ public class Main {
       final PrintWriter pw = new PrintWriter(System.err);
       f.printHelp(pw, 80, "match-scheduler", null, OPTIONS, 2, 2, null, true);
       pw.close();
+      System.err.println("For example: match-scheduler -t 48 -r 3 -d 12 -m 2 -g 3 -c 2 --randomMatches --randomSlots");
     }
   }
 
