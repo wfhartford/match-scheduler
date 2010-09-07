@@ -24,11 +24,11 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 
 public enum SadFaceFactor {
-  GYM(2) {
+  GYM(4) {
 
     @Override
     int getSadFaces(Slot slot, ImmutableSet<Team> match, Iterable<Match> existingMatches, int limit) {
-//      if (allByes(match)) return 0;
+      if (allByes(match)) return 0;
       int sadFaces = 0;
       for (Match m : existingMatches) {
         int commonTeams = Sets.intersection(match, m.getTeams()).size();
@@ -38,11 +38,11 @@ public enum SadFaceFactor {
       return sadFaces;
     }
   },
-  TIME(1) {
+  TIME(2) {
 
     @Override
     int getSadFaces(Slot slot, ImmutableSet<Team> match, Iterable<Match> existingMatches, int limit) {
-//      if (allByes(match)) return 0;
+      if (allByes(match)) return 0;
       int sadFaces = 0;
       for (Match m : existingMatches) {
         int commonTeams = Sets.intersection(match, m.getTeams()).size();
@@ -52,11 +52,25 @@ public enum SadFaceFactor {
       return sadFaces;
     }
   },
-  MATCH_UP(4) {
+  COURT(1) {
 
     @Override
     int getSadFaces(Slot slot, ImmutableSet<Team> match, Iterable<Match> existingMatches, int limit) {
-//      if (allByes(match)) return 0;
+      if (allByes(match)) return 0;
+      int sadFaces = 0;
+      for (Match m : existingMatches) {
+        int commonTeams = Sets.intersection(match, m.getTeams()).size();
+        if (0 != commonTeams && m.getSlot().getCourt().equals(slot.getCourt())) sadFaces += commonTeams;
+        if (sadFaces >= limit) break;
+      }
+      return sadFaces;
+    }
+  },
+  MATCH_UP(8) {
+
+    @Override
+    int getSadFaces(Slot slot, ImmutableSet<Team> match, Iterable<Match> existingMatches, int limit) {
+      if (allByes(match)) return 0;
       Multimap<Team, Team> playCount = ArrayListMultimap.create();
       for (Team t : match) {
         Set<Team> others = ImmutableSet.copyOf(Sets.difference(match, ImmutableSet.of(t)));
@@ -73,7 +87,7 @@ public enum SadFaceFactor {
       return sadFaces;
     }
   },
-  BYE_MATCH(0) {
+  BYE_MATCH(10000) {
 
     @Override
     int getSadFaces(Slot slot, ImmutableSet<Team> match, Iterable<Match> existingMatches, int limit) {
@@ -95,6 +109,6 @@ public enum SadFaceFactor {
   }
 
   boolean allByes(ImmutableSet<Team> match) {
-    return Iterables.size(Iterables.filter(match, Team.BYE_PREDICATE)) == match.size();
+    return Iterables.all(match, Team.BYE_PREDICATE);
   }
 }

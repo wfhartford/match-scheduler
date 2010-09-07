@@ -47,7 +47,7 @@ public final class Scheduler {
 
   private final ImmutableMap<Slot, Match> slotMatches;
 
-  public Scheduler(Configuration config, Set<String> teams, Set<String> tiers, Set<String> gyms, Set<String> courts, Set<String> times, Set<String> days, int size) throws InterruptedException {
+  public Scheduler(Configuration config, Set<String> teams, Set<String> tiers, Set<String> gyms, Set<String> courts, Set<String> times, Set<String> days, int teamSize) throws InterruptedException {
     if (null == config) throw new IllegalArgumentException("config may not be null");
     if (null == teams) throw new IllegalArgumentException("teams may not be null");
     if (null == tiers) throw new IllegalArgumentException("tiers may not be null");
@@ -63,12 +63,12 @@ public final class Scheduler {
     this.slots = Slot.forNames(this.times, this.courts, this.days);
     this.tiers = Tier.forNames(tiers);
     int slotsPerDay = gyms.size() * courts.size() * times.size();
-    int possibleTeams = slotsPerDay * size;
+    int possibleTeams = slotsPerDay * teamSize;
     ImmutableSet<Team> realTeams = Team.forNames(teams, this.tiers, (int) Math.ceil(possibleTeams / (double) this.tiers.size()));
     if (teams.size() > possibleTeams) throw new IllegalArgumentException(teams.size() + " teams cannot play in " + slotsPerDay + " slots per day");
     else if (teams.size() < possibleTeams) this.teams = padWithByes(this.tiers, realTeams, possibleTeams / this.tiers.size());
     else this.teams = realTeams;
-    this.matches = new MatchMaker(config, slots, this.teams, size).getMatches();
+    this.matches = new MatchMaker(config, slots, this.teams, teamSize).getMatches();
     ImmutableMap.Builder<Day, ImmutableMap<Time, ImmutableSet<Match>>> dayTimeMatches = ImmutableMap.builder();
     for (Day day : this.days) {
       ImmutableMap.Builder<Time, ImmutableSet<Match>> timeMatches = ImmutableMap.builder();

@@ -16,13 +16,12 @@ package ca.cutterslade.match.scheduler;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
 import com.google.common.base.Function;
-import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
-import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -64,23 +63,10 @@ final class MatchMaker {
       this.teamsPerMatch = teamsPerMatch;
     }
 
-//    @Override
-//    public Set<ImmutableSet<Team>> call() throws Exception {
-//      Set<ImmutableSet<Team>> tierMatches = Sets.newHashSet();
-//      for (Team t1 : tier)
-//        for (Team t2 : Collections2.filter(tier, Predicates.not(Predicates.in(ImmutableSet.of(t1)))))
-//          for (Team t3 : Collections2.filter(tier, Predicates.not(Predicates.in(ImmutableSet.of(t1, t2)))))
-//            for (Team t4 : Collections2.filter(tier, Predicates.not(Predicates.in(ImmutableSet.of(t1, t2, t3)))))
-//              tierMatches.add(ImmutableSet.of(t1, t2, t3, t4));
-//      System.out.println("Total of " + tierMatches.size() + " possible matches");
-//      return tierMatches;
-//    }
-
     @Override
     public Set<ImmutableSet<Team>> call() throws Exception {
       Set<ImmutableSet<Team>> matches = Sets.newLinkedHashSet();
       build(Sets.<Team> newLinkedHashSet(), matches);
-      System.out.println("Total of " + matches.size() + " possible matches");
       return matches;
     }
 
@@ -125,6 +111,8 @@ final class MatchMaker {
 
   }
 
+  private static final Random RANDOM = new Random();
+
   private final Executor executor = new Executor();
 
   private final Configuration configuration;
@@ -135,13 +123,13 @@ final class MatchMaker {
 
   private final ImmutableMultimap<Day, Slot> days;
 
-  private final int size;
+  private final int teamSize;
 
-  MatchMaker(Configuration configuration, ImmutableSet<Slot> slots, ImmutableSet<Team> teams, int size) {
+  MatchMaker(Configuration configuration, ImmutableSet<Slot> slots, ImmutableSet<Team> teams, int teamSize) {
     if (null == configuration) throw new IllegalArgumentException("configuration may not be null");
     if (null == slots) throw new IllegalArgumentException("slots may not be null");
     if (null == teams) throw new IllegalArgumentException("teams may not be null");
-    if (2 > size) throw new IllegalArgumentException("size must be two or greater");
+    if (2 > teamSize) throw new IllegalArgumentException("size must be two or greater");
     this.configuration = configuration;
     this.teams = teams;
     ImmutableMultimap.Builder<Tier, Team> tiers = ImmutableMultimap.builder();
@@ -153,11 +141,11 @@ final class MatchMaker {
     for (Slot s : slots)
       days.put(s.getDay(), s);
     this.days = days.build();
-    this.size = size;
+    this.teamSize = teamSize;
   }
 
   ImmutableSet<Match> getMatches() throws InterruptedException {
-    ImmutableSet<ImmutableSet<Team>> matches = executor.union(PossibleMatchesCallable.forTiers(this.tiers.asMap().values(), size));
+    ImmutableSet<ImmutableSet<Team>> matches = executor.union(PossibleMatchesCallable.forTiers(this.tiers.asMap().values(), teamSize));
     ImmutableSet.Builder<Match> b = ImmutableSet.builder();
     final Collection<Day> days;
     if (configuration.isRandomizeDayOrder()) {
@@ -175,38 +163,43 @@ final class MatchMaker {
     Set<Team> teams = Sets.newHashSet(this.teams);
     Set<Match> made = Sets.newHashSet();
     while (!teams.isEmpty()) {
-      final Collection<Slot> slots;
-      if (configuration.isRandomizeSlotOrder()) {
-        List<Slot> s = Lists.newArrayList(this.days.get(day));
-        Collections.shuffle(s);
-        slots = s;
-      }
-      else slots = this.days.get(day);
-      for (Slot s : slots) {
-        int leastSadFaces = Integer.MAX_VALUE;
-        ImmutableSet<Team> bestMatch = null;
-        for (ImmutableSet<Team> m : matches) {
-          if (teams.containsAll(m)) {
-            int sadFaces = getSadFaces(s, m, Iterables.concat(existing, made), leastSadFaces);
-            if (sadFaces < leastSadFaces) {
-              bestMatch = m;
-              if (0 == sadFaces) break;
-              leastSadFaces = sadFaces;
-            }
-          }
-        }
-        final Match m;
-        if (configuration.isRandomizeMatchOrder()) {
-          List<Team> r = Lists.newArrayList(bestMatch);
-          Collections.shuffle(r);
-          m = new Match(r, s);
-        }
-        else m = new Match(bestMatch, s);
-        made.add(m);
+      for (Slot s : getDaySlots(day)) {
+        final ImmutableSet<Team> bestMatch = getBestMatch(Iterables.concat(existing, made), matches, teams, s);
+        made.add(makeMatch(s, bestMatch));
         teams.removeAll(bestMatch);
       }
     }
     return ImmutableSet.copyOf(made);
+  }
+
+  private Collection<Slot> getDaySlots(Day day) {
+    Collection<Slot> slots = this.days.get(day);
+    if (configuration.isRandomizeSlotOrder()) {
+      List<Slot> s = Lists.newArrayList(slots);
+      Collections.shuffle(s, RANDOM);
+      slots = s;
+    }
+    return slots;
+  }
+
+  private ImmutableSet<Team> getBestMatch(Iterable<Match> existing, ImmutableSet<ImmutableSet<Team>> matches, Set<Team> teams, Slot s) throws InterruptedException {
+    int leastSadFaces = Integer.MAX_VALUE;
+    List<ImmutableSet<Team>> bestMatches = Lists.newArrayList();
+    for (ImmutableSet<Team> m : matches) {
+      if (teams.containsAll(m)) {
+        int sadFaces = getSadFaces(s, m, existing, leastSadFaces);
+        if (sadFaces < leastSadFaces) {
+          bestMatches.clear();
+          bestMatches.add(m);
+          if (0 == sadFaces) break;
+          leastSadFaces = sadFaces;
+        }
+        else if (sadFaces == leastSadFaces) {
+          bestMatches.add(m);
+        }
+      }
+    }
+    return 1 == bestMatches.size() ? Iterables.getOnlyElement(bestMatches) : bestMatches.get(RANDOM.nextInt(bestMatches.size()));
   }
 
   private int getSadFaces(Slot slot, ImmutableSet<Team> match, Iterable<Match> existingMatches, int limit) throws InterruptedException {
@@ -214,6 +207,17 @@ final class MatchMaker {
     for (SadFaceFactor f : SadFaceFactor.values())
       sfcs.add(new SadFacesCallable(f, configuration.getFactor(f), slot, match, existingMatches, limit));
     return executor.sum(sfcs);
+  }
+
+  private Match makeMatch(Slot s, final ImmutableSet<Team> bestMatch) {
+    final Match m;
+    if (configuration.isRandomizeMatchOrder()) {
+      List<Team> r = Lists.newArrayList(bestMatch);
+      Collections.shuffle(r, RANDOM);
+      m = new Match(r, s);
+    }
+    else m = new Match(bestMatch, s);
+    return m;
   }
 
 }

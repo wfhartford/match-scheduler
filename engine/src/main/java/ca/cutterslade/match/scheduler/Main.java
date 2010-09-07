@@ -70,7 +70,7 @@ public class Main {
       final HelpFormatter f = new HelpFormatter();
       final PrintWriter pw = new PrintWriter(System.err);
       f.printHelp(pw, 80, "match-scheduler", null, OPTIONS, 2, 2, null, true);
-      pw.println("For example: match-scheduler -t 48 -r 3 -d 12 -m 2 -g 3 -c 2 --randomMatches --randomSlots");
+      pw.println("For example: match-scheduler -t 48 -r 3 -d 12 -m 2 -g 3 -c 2 -z 4 --randomMatches --randomSlots");
       pw.close();
     }
   }
