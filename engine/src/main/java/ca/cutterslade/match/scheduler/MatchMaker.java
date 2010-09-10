@@ -145,7 +145,7 @@ final class MatchMaker {
   }
 
   ImmutableSet<Match> getMatches() throws InterruptedException {
-    ImmutableSet<ImmutableSet<Team>> matches = executor.union(PossibleMatchesCallable.forTiers(this.tiers.asMap().values(), teamSize));
+    ImmutableSet<ImmutableSet<Team>> matches = executor.interleaf(PossibleMatchesCallable.forTiers(this.tiers.asMap().values(), teamSize));
     ImmutableSet.Builder<Match> b = ImmutableSet.builder();
     final Collection<Day> days;
     if (configuration.isRandomizeDayOrder()) {
@@ -184,22 +184,19 @@ final class MatchMaker {
 
   private ImmutableSet<Team> getBestMatch(Iterable<Match> existing, ImmutableSet<ImmutableSet<Team>> matches, Set<Team> teams, Slot s) throws InterruptedException {
     int leastSadFaces = Integer.MAX_VALUE;
-    List<ImmutableSet<Team>> bestMatches = Lists.newArrayList();
+    ImmutableSet<Team> bestMatch = null;
     for (ImmutableSet<Team> m : matches) {
       if (teams.containsAll(m)) {
         int sadFaces = getSadFaces(s, m, existing, leastSadFaces);
         if (sadFaces < leastSadFaces) {
-          bestMatches.clear();
-          bestMatches.add(m);
+          bestMatch = m;
           if (0 == sadFaces) break;
           leastSadFaces = sadFaces;
         }
-        else if (sadFaces == leastSadFaces) {
-          bestMatches.add(m);
-        }
       }
     }
-    return 1 == bestMatches.size() ? Iterables.getOnlyElement(bestMatches) : bestMatches.get(RANDOM.nextInt(bestMatches.size()));
+    if (null == bestMatch) throw new AssertionError("bestMatch is null");
+    return bestMatch;
   }
 
   private int getSadFaces(Slot slot, ImmutableSet<Team> match, Iterable<Match> existingMatches, int limit) throws InterruptedException {

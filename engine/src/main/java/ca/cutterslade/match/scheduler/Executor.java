@@ -42,19 +42,19 @@ final class Executor {
     return sum;
   }
 
-  <T> ImmutableSet<T> union(Iterable<? extends Callable<Set<T>>> cs) throws InterruptedException {
+  <T> ImmutableSet<T> interleaf(Iterable<? extends Callable<Set<T>>> cs) throws InterruptedException {
     List<Future<Set<T>>> fs = Lists.newArrayList();
     for (Callable<Set<T>> c : cs)
       fs.add(service.submit(c));
-    ImmutableSet.Builder<T> b = ImmutableSet.builder();
+    List<Set<T>> results = Lists.newArrayList();
     for (Future<Set<T>> f : fs)
       try {
-        b.addAll(f.get());
+        results.add(f.get());
       }
       catch (ExecutionException e) {
         throw new AssertionError(e);
       }
-    return b.build();
+    return ImmutableSet.copyOf(new AlternatingIterable<T>(results));
   }
 
 }
