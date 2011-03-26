@@ -23,7 +23,20 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 
+/**
+ * Each enum constand defines a factor which makes people unhappy; the
+ * {@link #getSadFaces(Slot, ImmutableSet, Iterable, int)} method calculates the
+ * amount of unhappiness produced by a specific factor in a specific scenario.
+ * 
+ * @author W.F. Hartford
+ */
 public enum SadFaceFactor {
+  /**
+   * Calculates the unhappiness produced by teams playing in the same gym
+   * repeatedly.
+   * 
+   * @author W.F. Hartford
+   */
   GYM(4) {
 
     @Override
@@ -38,6 +51,12 @@ public enum SadFaceFactor {
       return sadFaces;
     }
   },
+  /**
+   * Calculates the unhappiness produced by teams playing at the same time
+   * repeatedly.
+   * 
+   * @author W.F. Hartford
+   */
   TIME(2) {
 
     @Override
@@ -52,6 +71,12 @@ public enum SadFaceFactor {
       return sadFaces;
     }
   },
+  /**
+   * Calculates the unhappiness produced by teams playing at the same time
+   * repeatedly.
+   * 
+   * @author W.F. Hartford
+   */
   COURT(1) {
 
     @Override
@@ -66,6 +91,12 @@ public enum SadFaceFactor {
       return sadFaces;
     }
   },
+  /**
+   * Calculates the unhappiness produced by teams playing against the same teams
+   * repeatedly.
+   * 
+   * @author W.F. Hartford
+   */
   MATCH_UP(8) {
 
     @Override
@@ -87,12 +118,34 @@ public enum SadFaceFactor {
       return sadFaces;
     }
   },
+  /**
+   * Calculates the unhappiness produced by matches without a full compliment of
+   * teams.
+   * 
+   * @author W.F. Hartford
+   */
   BYE_MATCH(10000) {
 
     @Override
     int getSadFaces(Slot slot, ImmutableSet<Team> match, Iterable<Match> existingMatches, int limit) {
       int byes = Iterables.size(Iterables.filter(match, Team.BYE_PREDICATE));
       return byes == match.size() || byes == 0 ? 0 : 1;
+    }
+  },
+  /**
+   * Calculates the unhappiness produced by teams of a common tier playing in
+   * the same gym on the same day.
+   * 
+   * @author W.F. Hartford
+   */
+  TIER_PER_GYM(2) {
+
+    @Override
+    int getSadFaces(Slot slot, ImmutableSet<Team> match, Iterable<Match> existingMatches, int limit) {
+      Tier tier = match.iterator().next().getTier();
+      Iterable<Match> relatedMatches = tier.getMatches(slot.getSameGymAndDayMatches(existingMatches));
+      int sameTierMatches = Iterables.size(relatedMatches);
+      return sameTierMatches * sameTierMatches;
     }
   };
 

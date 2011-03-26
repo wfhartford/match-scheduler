@@ -16,7 +16,9 @@ package ca.cutterslade.match.scheduler;
 import java.io.Serializable;
 import java.util.Set;
 
+import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 
 public final class Slot implements Serializable {
 
@@ -30,6 +32,14 @@ public final class Slot implements Serializable {
   private final Day day;
 
   private final Court court;
+
+  private final Predicate<Match> gymDayMatchPredicate = new Predicate<Match>() {
+
+    @Override
+    public boolean apply(Match input) {
+      return input.getDay().equals(getDay()) && input.getGym().equals(getGym());
+    }
+  };
 
   static ImmutableSet<Slot> forNames(Set<Time> times, Set<Court> courts, Set<Day> days) {
     ImmutableSet.Builder<Slot> b = ImmutableSet.builder();
@@ -63,6 +73,10 @@ public final class Slot implements Serializable {
 
   public Gym getGym() {
     return court.getGym();
+  }
+
+  public Iterable<Match> getSameGymAndDayMatches(Iterable<Match> matches) {
+    return Iterables.filter(matches, gymDayMatchPredicate);
   }
 
   @Override

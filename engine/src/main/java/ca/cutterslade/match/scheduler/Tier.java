@@ -38,6 +38,14 @@ public final class Tier implements Serializable {
       return input.getTier().equals(Tier.this);
     }
   };
+  
+  private final Predicate<Match> matchPredicate = new Predicate<Match>() {
+
+    @Override
+    public boolean apply(Match input) {
+      return input.getTier().equals(Tier.this);
+    }
+  };
 
   static ImmutableSet<Tier> forNames(Set<String> names) {
     return ImmutableSet.copyOf(Collections2.transform(names, new Function<String, Tier>() {
@@ -64,6 +72,10 @@ public final class Tier implements Serializable {
 
   public Iterable<Team> getTeams(Iterable<Team> allTeams) {
     return Iterables.filter(allTeams, teamPredicate);
+  }
+  
+  public Iterable<Match> getMatches(Iterable<Match> matches) {
+    return Iterables.filter(matches, matchPredicate);
   }
 
   @Override

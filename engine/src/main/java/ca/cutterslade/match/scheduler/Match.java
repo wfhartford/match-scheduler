@@ -15,6 +15,8 @@ package ca.cutterslade.match.scheduler;
 
 import java.io.Serializable;
 
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableSet;
 
 public final class Match implements Serializable {
@@ -27,7 +29,7 @@ public final class Match implements Serializable {
   private final ImmutableSet<Team> teams;
 
   private final Slot slot;
-
+  
   /**
    * @param bestMatch
    * @param s
@@ -61,6 +63,10 @@ public final class Match implements Serializable {
 
   public ImmutableSet<Team> getTeams() {
     return teams;
+  }
+  
+  public Tier getTier() {
+    return teams.iterator().next().getTier();
   }
 
   @Override
